@@ -1,3 +1,15 @@
+/*
++ wiki
++ wiki.go
++-+-data // Application Use data set
+| |---template
+| |---img
+|
++-+-pages
+  |---text // User's wiki document text data
+  |---img // User's wiki document image
+*/
+
 package main
 
 import (
@@ -6,6 +18,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -19,17 +33,27 @@ type Page struct {
 // For simplicity, use file name as title
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
-	return ioutil.WriteFile(filename, p.Body, 0600)
+	return ioutil.WriteFile(filepath.Join(usrDir, filename), p.Body, 0600)
 }
 
 // loadPage method return the Page struct pointer.
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
-	body, err := ioutil.ReadFile(filename)
+	body, err := ioutil.ReadFile(filepath.Join(usrDir, filename))
+
 	if err != nil {
 		return nil, err
 	}
 	return &Page{Title: title, Body: body}, nil
+}
+
+func getBinDir() (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Dir(exe), nil
 }
 
 func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
@@ -69,10 +93,27 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+func init() {
+	binDir, err := getBinDir()
+	if err != nil {
+		os.Exit(1)
+	}
+	usrDir = filepath.Join(binDir, `pages`)
+	dataDir := filepath.Join(binDir, `data`)
+
+	for _, tmpl := range []string{"edit", "view"} {
+		file := tmpl + ".html"
+		t := template.Must(template.ParseFiles(filepath.Join(dataDir, `tmpl`, file)))
+		templates[tmpl] = t
+	}
+}
+
+var templates = make(map[string]*template.Template)
+var usrDir, dataDir string
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	err := templates[tmpl].Execute(w, p)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
