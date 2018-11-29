@@ -2,7 +2,7 @@
 + wiki
 + wiki.go
 +-+-data // Application Use data set
-| |---template
+| |---tmpl
 | |---img
 |
 +-+-pages
@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 )
 
 // Page struct describes how page data will be stored in memory.
@@ -74,6 +75,15 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	renderTemplate(w, "view", p)
 }
 
+func frontHandler(w http.ResponseWriter, r *http.Request, title string) {
+	p, err := loadPage(title)
+	if err != nil {
+		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+		return
+	}
+	renderTemplate(w, "frontPage", p)
+}
+
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := loadPage(title)
 	if err != nil {
@@ -93,6 +103,40 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
+type FileInfos []os.FileInfo
+type ByName struct{ FileInfos }
+
+func (fi ByName) Len() int {
+	return len(fi.FileInfos)
+}
+
+func (fi ByName) Swap(i, j int) {
+	fi.FileInfos[i], fi.FileInfos[j] = fi.FileInfos[j], fi.FileInfos[i]
+}
+
+func (fi ByName) Less(i, j int) bool {
+	return fi.FileInfos[j].ModTime().Unix() < fi.FileInfos[i].ModTime().Unix()
+}
+
+func getFileNameWithoutExt(path string) string {
+	return filepath.Base(path[:len(path)-len(filepath.Ext(path))])
+}
+
+func getLatestPage() []string {
+	files, err := ioutil.ReadDir(usrDir)
+	if err != nil {
+		panic(err)
+	}
+
+	sort.Sort(ByName{files})
+	var paths []string
+	for _, file := range files {
+		paths = append(paths, getFileNameWithoutExt(file.Name()))
+	}
+
+	return paths
+}
+
 func init() {
 	binDir, err := getBinDir()
 	if err != nil {
@@ -100,10 +144,14 @@ func init() {
 	}
 	usrDir = filepath.Join(binDir, `pages`)
 	dataDir := filepath.Join(binDir, `data`)
+	funcMaps := template.FuncMap{
+		"getLatestPage": getLatestPage,
+	}
 
-	for _, tmpl := range []string{"edit", "view"} {
+	// read template file
+	for _, tmpl := range []string{"edit", "view", "frontPage"} {
 		file := tmpl + ".html"
-		t := template.Must(template.ParseFiles(filepath.Join(dataDir, `tmpl`, file)))
+		t := template.Must(template.New(file).Funcs(funcMaps).ParseFiles(filepath.Join(dataDir, `tmpl`, file)))
 		templates[tmpl] = t
 	}
 }
@@ -124,12 +172,17 @@ var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		m := validPath.FindStringSubmatch(r.URL.Path)
-		if m == nil {
-			http.NotFound(w, r)
-			return
+		if r.URL.Path == "/" {
+			fn(w, r, "frontPage")
+		} else {
+
+			m := validPath.FindStringSubmatch(r.URL.Path)
+			if m == nil {
+				http.NotFound(w, r)
+				return
+			}
+			fn(w, r, m[2])
 		}
-		fn(w, r, m[2])
 	}
 }
 
@@ -137,6 +190,7 @@ func main() {
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
+	http.HandleFunc("/", makeHandler(frontHandler))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
