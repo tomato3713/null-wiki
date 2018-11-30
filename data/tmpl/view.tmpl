@@ -1,11 +1,14 @@
 {{ define "view" }}
 {{ template "header" }}
 <h1>{{.Title}}</h1>
+<hr/>
 
 <p>[<a href="/edit/{{.Title}}">edit</a>]</p>
 
-<div>{{printf "%s" .Body}}</div>
+<div class="body">{{printf "%s" .Parsed}}</div>
 
+<p>[<a href="/edit/{{.Title}}">edit</a>]</p>
+<hr/>
 {{template "page_list" }}
 {{template "footer"}}
 {{ end }}

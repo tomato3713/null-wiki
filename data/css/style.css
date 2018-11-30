@@ -1,0 +1,37 @@
+h1 {
+    text-align: center;
+    background-color: #EEFFFF;
+}
+hr {
+    height:12px;
+    border:0;
+    box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
+}
+
+table {
+    width:auto;
+    border-spacing:0;
+    font-size: 14px;
+}
+table > th {
+    color: #fff;
+    padding: 8px 15px;
+    background: #258;
+    font-weight: bold;
+    line-height: 120%;
+    text-align: center;
+    text-shadow: 0 -1px - rgba(255, 255, 255, 0.3) inset;
+}
+
+table > th:last-child {
+    border-radius: 5px 0 0 0;
+}
+
+table tr {
+    background: #fff
+}
+
+table tr:hover {
+    background: #bbd4ee;
+    cursor: pointer;
+}

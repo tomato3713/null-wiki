@@ -14,7 +14,8 @@ package main
 
 import (
 	"errors"
-	"html/template"
+	//"fmt"
+	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,12 +23,14 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"text/template"
 )
 
 // Page struct describes how page data will be stored in memory.
 type Page struct {
-	Title string
-	Body  []byte
+	Title  string
+	Body   []byte
+	Parsed []byte
 }
 
 // Save method will save the Page's Body to a text file.
@@ -41,11 +44,29 @@ func (p *Page) save() error {
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
 	body, err := ioutil.ReadFile(filepath.Join(usrDir, filename))
-
 	if err != nil {
 		return nil, err
 	}
-	return &Page{Title: title, Body: body}, nil
+
+	parsedBody := parse(body)
+
+	return &Page{Title: title, Body: body, Parsed: parsedBody}, nil
+}
+
+func parse(body []byte) []byte {
+	escaped := html.EscapeString(string(body))
+
+	// parse "# title" to "<h*>title</h*>
+	regSec1Str := regexp.MustCompile("(?m:(^#[[:space:]])(.+))")
+	escaped = regSec1Str.ReplaceAllString(escaped, "<h2>$2</h2>")
+
+	regSec2Str := regexp.MustCompile("(?m:(^##[[:space:]])(.+))")
+	escaped = regSec2Str.ReplaceAllString(escaped, "<h3>$2</h3>")
+
+	regSec3Str := regexp.MustCompile("(?m:(^##[[:space:]])(.+))")
+	escaped = regSec3Str.ReplaceAllString(escaped, "<h4>$2</h4>")
+
+	return []byte(escaped)
 }
 
 func getBinDir() (string, error) {
@@ -76,12 +97,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func frontHandler(w http.ResponseWriter, r *http.Request, title string) {
-	p, err := loadPage(title)
-	if err != nil {
-		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-		return
-	}
-	renderTemplate(w, "frontPage", p)
+	viewHandler(w, r, "frontPage")
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -149,7 +165,8 @@ func init() {
 	}
 
 	// read template file
-	for _, tmpl := range []string{"edit", "view", "frontPage"} {
+	//for _, tmpl := range []string{"edit", "view", "frontPage"} {
+	for _, tmpl := range []string{"edit", "view"} {
 		file := tmpl + ".tmpl"
 		t := template.Must(template.New(file).Funcs(funcMaps).ParseFiles(filepath.Join(dataDir, `tmpl`, file), filepath.Join(dataDir, `tmpl`, `content.tmpl`)))
 		templates[tmpl] = t
@@ -188,6 +205,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func main() {
+	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data/"))))
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
