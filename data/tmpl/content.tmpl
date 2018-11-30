@@ -1,9 +1,18 @@
-<h1>FrontPage</h1>
+{{ define "footer" }}
+</body>
+</html>
+{{end}}
 
-<p>[<a href="/edit/{{.Title}}">edit</a>]</p>
+{{ define "header" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Null wiki</title>
+</head>
+<body>
+{{ end }}
 
-<div>{{printf "%s" .Body}}</div>
-
+{{ define "page_list" }}
 <div class="page_list">
     <h1>Latest Updated Pages</h1>
     <ul>
@@ -12,3 +21,4 @@
         {{ end }}
     </ul>
 </div>
+{{ end }}

@@ -150,8 +150,8 @@ func init() {
 
 	// read template file
 	for _, tmpl := range []string{"edit", "view", "frontPage"} {
-		file := tmpl + ".html"
-		t := template.Must(template.New(file).Funcs(funcMaps).ParseFiles(filepath.Join(dataDir, `tmpl`, file)))
+		file := tmpl + ".tmpl"
+		t := template.Must(template.New(file).Funcs(funcMaps).ParseFiles(filepath.Join(dataDir, `tmpl`, file), filepath.Join(dataDir, `tmpl`, `content.tmpl`)))
 		templates[tmpl] = t
 	}
 }
@@ -160,7 +160,8 @@ var templates = make(map[string]*template.Template)
 var usrDir, dataDir string
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	err := templates[tmpl].Execute(w, p)
+	//err := templates[tmpl].Execute(w, p)
+	err := templates[tmpl].ExecuteTemplate(w, tmpl, p)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

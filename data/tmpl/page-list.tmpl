@@ -1,0 +1,10 @@
+{{ define "page_list" }}
+<div class="page_list">
+    <h1>Latest Updated Pages</h1>
+    <ul>
+        {{ range getLatestPage }}
+        <a href="/view/{{ . }}"><li>{{ . }}</li></a>
+        {{ end }}
+    </ul>
+</div>
+{{ end }}
