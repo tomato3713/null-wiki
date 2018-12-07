@@ -13,9 +13,8 @@
 package main
 
 import (
+	"context"
 	"errors"
-	//"fmt"
-	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +23,11 @@ import (
 	"regexp"
 	"sort"
 	"text/template"
+
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/parser"
+	"github.com/google/go-github/github"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 // Page struct describes how page data will be stored in memory.
@@ -48,25 +52,34 @@ func loadPage(title string) (*Page, error) {
 		return nil, err
 	}
 
-	parsedBody := parse(body)
+	parsedBody := githubMdParse(body)
 
 	return &Page{Title: title, Body: body, Parsed: parsedBody}, nil
 }
 
-func parse(body []byte) []byte {
-	escaped := html.EscapeString(string(body))
+// markdown to html by github Web API
+func githubMdParse(input []byte) []byte {
+	client := github.NewClient(nil)
+	opt := &github.MarkdownOptions{Mode: "gfm", Context: "google/go-github"}
+	maybeUnsafeHTML, _, err := client.Markdown(context.Background(), string(input), opt)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// parse "# title" to "<h*>title</h*>
-	regSec1Str := regexp.MustCompile("(?m:(^#[[:space:]])(.+))")
-	escaped = regSec1Str.ReplaceAllString(escaped, "<h2>$2</h2>")
+	output := bluemonday.UGCPolicy().SanitizeBytes([]byte(maybeUnsafeHTML))
 
-	regSec2Str := regexp.MustCompile("(?m:(^##[[:space:]])(.+))")
-	escaped = regSec2Str.ReplaceAllString(escaped, "<h3>$2</h3>")
+	return output
+}
 
-	regSec3Str := regexp.MustCompile("(?m:(^##[[:space:]])(.+))")
-	escaped = regSec3Str.ReplaceAllString(escaped, "<h4>$2</h4>")
+// markdown to html by gomarkdown format
+func goMdParse(input []byte) []byte {
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 
-	return []byte(escaped)
+	p := parser.NewWithExtensions(extensions)
+
+	html := markdown.ToHTML(input, p, nil)
+	log.Print(string(html))
+	return html
 }
 
 func getBinDir() (string, error) {
