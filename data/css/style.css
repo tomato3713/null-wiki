@@ -1,6 +1,18 @@
-h1 {
+header > h1 {
     text-align: center;
     background-color: #EEFFFF;
+}
+
+nav {
+    background-color: #EEFFFE;
+    padding: 3px;
+}
+ul {
+    padding: 3px;
+}
+.horizon-list > ul > li {
+    display: inline;
+    padding-right: 3px;
 }
 hr {
     height:12px;
@@ -34,4 +46,9 @@ table tr {
 table tr:hover {
     background: #bbd4ee;
     cursor: pointer;
+}
+
+a {
+    a: hover {
+        background-color: #aaaaaa;
 }
