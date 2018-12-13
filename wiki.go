@@ -15,6 +15,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,33 +30,6 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/microcosm-cc/bluemonday"
 )
-
-// Page struct describes how page data will be stored in memory.
-type Page struct {
-	Title  string
-	Body   []byte
-	Parsed []byte
-}
-
-// Save method will save the Page's Body to a text file.
-// For simplicity, use file name as title
-func (p *Page) save() error {
-	filename := p.Title + ".txt"
-	return ioutil.WriteFile(filepath.Join(usrDir, filename), p.Body, 0600)
-}
-
-// loadPage method return the Page struct pointer.
-func loadPage(title string) (*Page, error) {
-	filename := title + ".txt"
-	body, err := ioutil.ReadFile(filepath.Join(usrDir, filename))
-	if err != nil {
-		return nil, err
-	}
-
-	parsedBody := githubMdParse(body)
-
-	return &Page{Title: title, Body: body, Parsed: parsedBody}, nil
-}
 
 // markdown to html by github Web API
 func githubMdParse(input []byte) []byte {
@@ -218,11 +192,16 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func main() {
+	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
+	flag.Parse() // フラグを解釈します
+
 	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data/"))))
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.HandleFunc("/", makeHandler(frontHandler))
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	if err := http.ListenAndServe(*addr, nil); err != nil {
+		log.Fatal("ListenAndServe", err)
+	}
 }
