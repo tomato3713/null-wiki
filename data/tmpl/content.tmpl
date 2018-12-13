@@ -9,14 +9,12 @@
     <header>
         <h1>Null Wiki</h1>
         <hr/>
-        {{ template "menu_list" . }}
     </header>
 {{ end }}
 
 {{ define "footer" }}
 <footer>
-    {{ template "menu_list" . }}
-    {{ template "page_list" }}
+<p>All right reserved.</p>
 </footer>
 </body>
 </html>
@@ -24,20 +22,18 @@
 
 
 {{ define "page_list" }}
-<div class="page_list">
+<nav id="page_list">
     <h1>Latest Updated Pages</h1>
-    <nav>
-        <ul>
-            {{ range getLatestPage }}
-            <a href="/view/{{ . }}"><li>{{ . }}</li></a>
-            {{ end }}
-        </ul>
-    </nav>
-</div>
+    <ul>
+        {{ range getLatestPage }}
+        <a href="/view/{{ . }}"><li>{{ . }}</li></a>
+        {{ end }}
+    </ul>
+</nav>
 {{ end }}
 
-{{ define "menu_list" }}
-<nav class="horizon-list header-menu-list">
+{{ define "view_menu_list" }}
+<nav class="horizon_list" id="view_menu_list">
     <ul>
         <li><a href="/">frontPage</a></li>
         <li><a href="/view/{{.}}">Reload</a></li>

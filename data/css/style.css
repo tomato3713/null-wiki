@@ -1,54 +1,57 @@
-header > h1 {
-    text-align: center;
-    background-color: #EEFFFF;
+body {
+    font-family: Georgia, 'Hiragino Mincho Pro', Meiryo, serif;
+    color: #000;
+    width:960px;
+    margin:20px auto;
+    line-height:1.5em;
 }
-
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Hiragino Kaku Gothic Pro", Meiryo, sans-serif;
+    font-weight:bolder;
+}
+a:link, a:visited {
+    color:#c00;
+    text-decoration:none;
+}
+a:hover {
+    color:#0cc;
+}
+header, nav, section, footer {
+    display:block;
+    border:1px solid #ccc;
+    margin:5px;
+    padding:20px;
+    color:#000;
+    text-align:left;
+}
+header {
+    text-align:center;
+    padding:30px;
+    background-color: #444;
+    border: none;
+    color:#fff;
+    text-shadow: 0px 0px 4px #000000;
+}
+header ul, header li {
+    list-style-type:none;
+    display:inline;
+}
 nav {
-    background-color: #EEFFFE;
-    padding: 3px;
+    float:right;
+    width:236px;
 }
-ul {
-    padding: 3px;
+nav h1 {
+    font-size: 1.4em;
 }
-.horizon-list > ul > li {
-    display: inline;
-    padding-right: 3px;
+section {
+    float:right;
+    width:620px;
 }
-hr {
-    height:12px;
-    border:0;
-    box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
-}
-
-table {
-    width:auto;
-    border-spacing:0;
-    font-size: 14px;
-}
-table > th {
-    color: #fff;
-    padding: 8px 15px;
-    background: #258;
-    font-weight: bold;
-    line-height: 120%;
+footer {
+    clear:both !important;
     text-align: center;
-    text-shadow: 0 -1px - rgba(255, 255, 255, 0.3) inset;
-}
-
-table > th:last-child {
-    border-radius: 5px 0 0 0;
-}
-
-table tr {
-    background: #fff
-}
-
-table tr:hover {
-    background: #bbd4ee;
-    cursor: pointer;
-}
-
-a {
-    a: hover {
-        background-color: #aaaaaa;
+    background-color: #444;
+    border: none;
+    color:#fff;
+    text-shadow: 0px 0px 4px #000000;
 }
