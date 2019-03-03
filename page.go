@@ -27,7 +27,7 @@ func loadPage(title string) (*Page, error) {
 		return nil, err
 	}
 
-	parsedBody := githubMdParse(body)
+	parsedBody := goMdParse(body)
 
 	return &Page{Title: title, Body: body, Parsed: parsedBody}, nil
 }

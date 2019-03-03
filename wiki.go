@@ -1,21 +1,8 @@
-/*
-+ wiki
-+ wiki.go
-+-+-data // Application Use data set
-| |---tmpl
-| |---img
-|
-+-+-pages
-  |---text // User's wiki document text data
-  |---img // User's wiki document image
-*/
-
 package main
 
 import (
 	"context"
 	"errors"
-	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -106,21 +93,6 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-type FileInfos []os.FileInfo
-type ByName struct{ FileInfos }
-
-func (fi ByName) Len() int {
-	return len(fi.FileInfos)
-}
-
-func (fi ByName) Swap(i, j int) {
-	fi.FileInfos[i], fi.FileInfos[j] = fi.FileInfos[j], fi.FileInfos[i]
-}
-
-func (fi ByName) Less(i, j int) bool {
-	return fi.FileInfos[j].ModTime().Unix() < fi.FileInfos[i].ModTime().Unix()
-}
-
 func getFileNameWithoutExt(path string) string {
 	return filepath.Base(path[:len(path)-len(filepath.Ext(path))])
 }
@@ -188,20 +160,5 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 			}
 			fn(w, r, m[2])
 		}
-	}
-}
-
-func main() {
-	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
-	flag.Parse() // フラグを解釈します
-
-	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data/"))))
-	http.HandleFunc("/view/", makeHandler(viewHandler))
-	http.HandleFunc("/edit/", makeHandler(editHandler))
-	http.HandleFunc("/save/", makeHandler(saveHandler))
-	http.HandleFunc("/", makeHandler(frontHandler))
-
-	if err := http.ListenAndServe(*addr, nil); err != nil {
-		log.Fatal("ListenAndServe", err)
 	}
 }
