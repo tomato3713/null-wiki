@@ -1,7 +1,8 @@
 version: '3.9'
 
 services:
-  mysql:
+  db:
+    container_name: db
     image: mysql:8.0.34
     ports:
       - "3306:3306"
@@ -12,3 +13,16 @@ services:
       MYSQL_PASSWORD: password
     restart:
       always
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: builder
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    command: ["reflex", "-r", "^(cmd|pkg)/.*.go$", "-s", "go", "run", "./cmd/nullwiki/wiki.go"]
+    volumes:
+      - .:/app:cached
