@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/tomato3713/nullwiki/pkg/ent"
 	"github.com/tomato3713/nullwiki/pkg/wiki"
 	"log/slog"
@@ -14,7 +15,7 @@ func main() {
 	ctx := context.Background()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	client, err := ent.Open("mysql", "wiki:password@tcp(db:3306)/wiki_local?parseTime=True")
+	client, err := ent.Open("mysql", getDbConnStr())
 	if err != nil {
 		logger.Warn("failed opening connection to mysql: %v", err)
 		panic(err)
@@ -31,4 +32,8 @@ func main() {
 		Context:  &ctx,
 		DbClient: client,
 	}
+}
+
+func getDbConnStr() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_ADDR"), os.Getenv("MYSQL_PORT"), os.Getenv("MYSQL_TABLENAME"))
 }

@@ -13,6 +13,8 @@ services:
       MYSQL_PASSWORD: password
     restart:
       always
+    volumes:
+      - ./tmp/mysql:/var/lib/mysql:delegated
   api:
     container_name: api
     build:
@@ -24,5 +26,12 @@ services:
     depends_on:
       - db
     command: ["reflex", "-r", "^(cmd|pkg)/.*.go$", "-s", "go", "run", "./cmd/nullwiki/wiki.go"]
+    tty: true
     volumes:
       - .:/app:cached
+    environment:
+      MYSQL_USER: wiki
+      MYSQL_PASSWORD: password
+      MYSQL_TABLENAME: wiki_local
+      MYSQL_ADDR: db
+      MYSQL_PORT: 3306

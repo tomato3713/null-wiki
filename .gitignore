@@ -1,2 +1,12 @@
 /pages/
 /wiki
+/tmp/
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go
+go.work
