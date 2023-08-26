@@ -8,10 +8,35 @@ import (
 )
 
 var (
+	// PagesColumns holds the columns for the "pages" table.
+	PagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "body", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "text_format", Type: field.TypeUint, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_pages", Type: field.TypeInt, Nullable: true},
+	}
+	// PagesTable holds the schema information for the "pages" table.
+	PagesTable = &schema.Table{
+		Name:       "pages",
+		Columns:    PagesColumns,
+		PrimaryKey: []*schema.Column{PagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "pages_users_pages",
+				Columns:    []*schema.Column{PagesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Default: "unknown"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -21,9 +46,11 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		PagesTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	PagesTable.ForeignKeys[0].RefTable = UsersTable
 }

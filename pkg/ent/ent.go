@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tomato3713/nullwiki/pkg/ent/page"
 	"github.com/tomato3713/nullwiki/pkg/ent/user"
 )
 
@@ -73,6 +74,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			page.Table: page.ValidColumn,
 			user.Table: user.ValidColumn,
 		})
 	})

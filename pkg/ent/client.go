@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tomato3713/nullwiki/pkg/ent/page"
 	"github.com/tomato3713/nullwiki/pkg/ent/user"
 )
 
@@ -21,6 +23,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Page is the client for interacting with the Page builders.
+	Page *PageClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -36,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Page = NewPageClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -119,6 +124,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Page:   NewPageClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -139,6 +145,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Page:   NewPageClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -146,7 +153,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		Page.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -168,22 +175,160 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Page.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Page.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *PageMutation:
+		return c.Page.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// PageClient is a client for the Page schema.
+type PageClient struct {
+	config
+}
+
+// NewPageClient returns a client for the Page from the given config.
+func NewPageClient(c config) *PageClient {
+	return &PageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `page.Hooks(f(g(h())))`.
+func (c *PageClient) Use(hooks ...Hook) {
+	c.hooks.Page = append(c.hooks.Page, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `page.Intercept(f(g(h())))`.
+func (c *PageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Page = append(c.inters.Page, interceptors...)
+}
+
+// Create returns a builder for creating a Page entity.
+func (c *PageClient) Create() *PageCreate {
+	mutation := newPageMutation(c.config, OpCreate)
+	return &PageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Page entities.
+func (c *PageClient) CreateBulk(builders ...*PageCreate) *PageCreateBulk {
+	return &PageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Page.
+func (c *PageClient) Update() *PageUpdate {
+	mutation := newPageMutation(c.config, OpUpdate)
+	return &PageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PageClient) UpdateOne(pa *Page) *PageUpdateOne {
+	mutation := newPageMutation(c.config, OpUpdateOne, withPage(pa))
+	return &PageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PageClient) UpdateOneID(id int) *PageUpdateOne {
+	mutation := newPageMutation(c.config, OpUpdateOne, withPageID(id))
+	return &PageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Page.
+func (c *PageClient) Delete() *PageDelete {
+	mutation := newPageMutation(c.config, OpDelete)
+	return &PageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PageClient) DeleteOne(pa *Page) *PageDeleteOne {
+	return c.DeleteOneID(pa.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PageClient) DeleteOneID(id int) *PageDeleteOne {
+	builder := c.Delete().Where(page.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PageDeleteOne{builder}
+}
+
+// Query returns a query builder for Page.
+func (c *PageClient) Query() *PageQuery {
+	return &PageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Page entity by its id.
+func (c *PageClient) Get(ctx context.Context, id int) (*Page, error) {
+	return c.Query().Where(page.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PageClient) GetX(ctx context.Context, id int) *Page {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a Page.
+func (c *PageClient) QueryOwner(pa *Page) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pa.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(page.Table, page.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, page.OwnerTable, page.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PageClient) Hooks() []Hook {
+	return c.hooks.Page
+}
+
+// Interceptors returns the client interceptors.
+func (c *PageClient) Interceptors() []Interceptor {
+	return c.inters.Page
+}
+
+func (c *PageClient) mutate(ctx context.Context, m *PageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Page mutation op: %q", m.Op())
 	}
 }
 
@@ -280,6 +425,22 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
+// QueryPages queries the pages edge of a User.
+func (c *UserClient) QueryPages(u *User) *PageQuery {
+	query := (&PageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(page.Table, page.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PagesTable, user.PagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -308,9 +469,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		Page, User []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		Page, User []ent.Interceptor
 	}
 )

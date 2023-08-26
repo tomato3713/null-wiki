@@ -3,6 +3,9 @@
 package ent
 
 import (
+	"time"
+
+	"github.com/tomato3713/nullwiki/pkg/ent/page"
 	"github.com/tomato3713/nullwiki/pkg/ent/schema"
 	"github.com/tomato3713/nullwiki/pkg/ent/user"
 )
@@ -11,10 +14,40 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	pageFields := schema.Page{}.Fields()
+	_ = pageFields
+	// pageDescBody is the schema descriptor for body field.
+	pageDescBody := pageFields[0].Descriptor()
+	// page.DefaultBody holds the default value on creation for the body field.
+	page.DefaultBody = pageDescBody.Default.(string)
+	// pageDescTextFormat is the schema descriptor for text_format field.
+	pageDescTextFormat := pageFields[1].Descriptor()
+	// page.DefaultTextFormat holds the default value on creation for the text_format field.
+	page.DefaultTextFormat = pageDescTextFormat.Default.(uint)
+	// pageDescCreatedAt is the schema descriptor for created_at field.
+	pageDescCreatedAt := pageFields[2].Descriptor()
+	// page.DefaultCreatedAt holds the default value on creation for the created_at field.
+	page.DefaultCreatedAt = pageDescCreatedAt.Default.(func() time.Time)
+	// pageDescUpdatedAt is the schema descriptor for updated_at field.
+	pageDescUpdatedAt := pageFields[3].Descriptor()
+	// page.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	page.DefaultUpdatedAt = pageDescUpdatedAt.Default.(func() time.Time)
+	// page.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	page.UpdateDefaultUpdatedAt = pageDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.
 	userDescName := userFields[0].Descriptor()
 	// user.DefaultName holds the default value on creation for the name field.
 	user.DefaultName = userDescName.Default.(string)
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[1].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[2].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
 }
