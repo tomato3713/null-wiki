@@ -1,6 +1,6 @@
 module github.com/tomato3713/nullwiki
 
-go 1.21.0
+go 1.20
 
 require (
 	entgo.io/ent v0.12.3
