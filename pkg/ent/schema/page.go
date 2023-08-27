@@ -25,6 +25,6 @@ func (Page) Fields() []ent.Field {
 // Edges of the Page.
 func (Page) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).Ref("pages").Unique(),
+		edge.From("owner", User.Type).Ref("pages"),
 	}
 }

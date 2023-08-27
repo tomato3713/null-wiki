@@ -412,10 +412,10 @@ func (pq *PageQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*P
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Page)
 	for i := range nodes {
-		if nodes[i].user_pages == nil {
+		if nodes[i].user_id == nil {
 			continue
 		}
-		fk := *nodes[i].user_pages
+		fk := *nodes[i].user_id
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -432,7 +432,7 @@ func (pq *PageQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*P
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_pages" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

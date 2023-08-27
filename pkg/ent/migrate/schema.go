@@ -15,7 +15,7 @@ var (
 		{Name: "text_format", Type: field.TypeUint, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "user_pages", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
 	// PagesTable holds the schema information for the "pages" table.
 	PagesTable = &schema.Table{

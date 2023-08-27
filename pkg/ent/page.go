@@ -29,7 +29,7 @@ type Page struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PageQuery when eager-loading is set.
 	Edges        PageEdges `json:"edges"`
-	user_pages   *int
+	user_id      *int
 	selectValues sql.SelectValues
 }
 
@@ -66,7 +66,7 @@ func (*Page) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case page.FieldCreatedAt, page.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case page.ForeignKeys[0]: // user_pages
+		case page.ForeignKeys[0]: // user_id
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -115,10 +115,10 @@ func (pa *Page) assignValues(columns []string, values []any) error {
 			}
 		case page.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_pages", value)
+				return fmt.Errorf("unexpected type %T for edge-field user_id", value)
 			} else if value.Valid {
-				pa.user_pages = new(int)
-				*pa.user_pages = int(value.Int64)
+				pa.user_id = new(int)
+				*pa.user_id = int(value.Int64)
 			}
 		default:
 			pa.selectValues.Set(columns[i], values[i])

@@ -30,7 +30,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "page" package.
 	PagesInverseTable = "pages"
 	// PagesColumn is the table column denoting the pages relation/edge.
-	PagesColumn = "user_pages"
+	PagesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
