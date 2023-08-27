@@ -5,6 +5,9 @@ package ent
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"strconv"
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
@@ -301,6 +304,107 @@ func (pa *PageQuery) Paginate(
 	return conn, nil
 }
 
+var (
+	// PageOrderFieldBody orders Page by body.
+	PageOrderFieldBody = &PageOrderField{
+		Value: func(pa *Page) (ent.Value, error) {
+			return pa.Body, nil
+		},
+		column: page.FieldBody,
+		toTerm: page.ByBody,
+		toCursor: func(pa *Page) Cursor {
+			return Cursor{
+				ID:    pa.ID,
+				Value: pa.Body,
+			}
+		},
+	}
+	// PageOrderFieldTextFormat orders Page by text_format.
+	PageOrderFieldTextFormat = &PageOrderField{
+		Value: func(pa *Page) (ent.Value, error) {
+			return pa.TextFormat, nil
+		},
+		column: page.FieldTextFormat,
+		toTerm: page.ByTextFormat,
+		toCursor: func(pa *Page) Cursor {
+			return Cursor{
+				ID:    pa.ID,
+				Value: pa.TextFormat,
+			}
+		},
+	}
+	// PageOrderFieldCreatedAt orders Page by created_at.
+	PageOrderFieldCreatedAt = &PageOrderField{
+		Value: func(pa *Page) (ent.Value, error) {
+			return pa.CreatedAt, nil
+		},
+		column: page.FieldCreatedAt,
+		toTerm: page.ByCreatedAt,
+		toCursor: func(pa *Page) Cursor {
+			return Cursor{
+				ID:    pa.ID,
+				Value: pa.CreatedAt,
+			}
+		},
+	}
+	// PageOrderFieldUpdatedAt orders Page by updated_at.
+	PageOrderFieldUpdatedAt = &PageOrderField{
+		Value: func(pa *Page) (ent.Value, error) {
+			return pa.UpdatedAt, nil
+		},
+		column: page.FieldUpdatedAt,
+		toTerm: page.ByUpdatedAt,
+		toCursor: func(pa *Page) Cursor {
+			return Cursor{
+				ID:    pa.ID,
+				Value: pa.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PageOrderField) String() string {
+	var str string
+	switch f.column {
+	case PageOrderFieldBody.column:
+		str = "BODY"
+	case PageOrderFieldTextFormat.column:
+		str = "TEXT_FORMAT"
+	case PageOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PageOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PageOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PageOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PageOrderField %T must be a string", v)
+	}
+	switch str {
+	case "BODY":
+		*f = *PageOrderFieldBody
+	case "TEXT_FORMAT":
+		*f = *PageOrderFieldTextFormat
+	case "CREATED_AT":
+		*f = *PageOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PageOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PageOrderField", str)
+	}
+	return nil
+}
+
 // PageOrderField defines the ordering field of Page.
 type PageOrderField struct {
 	// Value extracts the ordering value from the given Page.
@@ -545,6 +649,89 @@ func (u *UserQuery) Paginate(
 	}
 	conn.build(nodes, pager, after, first, before, last)
 	return conn, nil
+}
+
+var (
+	// UserOrderFieldName orders User by name.
+	UserOrderFieldName = &UserOrderField{
+		Value: func(u *User) (ent.Value, error) {
+			return u.Name, nil
+		},
+		column: user.FieldName,
+		toTerm: user.ByName,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.Name,
+			}
+		},
+	}
+	// UserOrderFieldCreatedAt orders User by created_at.
+	UserOrderFieldCreatedAt = &UserOrderField{
+		Value: func(u *User) (ent.Value, error) {
+			return u.CreatedAt, nil
+		},
+		column: user.FieldCreatedAt,
+		toTerm: user.ByCreatedAt,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.CreatedAt,
+			}
+		},
+	}
+	// UserOrderFieldUpdatedAt orders User by updated_at.
+	UserOrderFieldUpdatedAt = &UserOrderField{
+		Value: func(u *User) (ent.Value, error) {
+			return u.UpdatedAt, nil
+		},
+		column: user.FieldUpdatedAt,
+		toTerm: user.ByUpdatedAt,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f UserOrderField) String() string {
+	var str string
+	switch f.column {
+	case UserOrderFieldName.column:
+		str = "NAME"
+	case UserOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case UserOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f UserOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *UserOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("UserOrderField %T must be a string", v)
+	}
+	switch str {
+	case "NAME":
+		*f = *UserOrderFieldName
+	case "CREATED_AT":
+		*f = *UserOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *UserOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid UserOrderField", str)
+	}
+	return nil
 }
 
 // UserOrderField defines the ordering field of User.

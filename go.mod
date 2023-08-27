@@ -13,7 +13,11 @@ require (
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/matryer/moq v0.2.7 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/urfave/cli/v2 v2.4.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.9 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	golang.org/x/exp v0.0.0-20221230185412-738e83a70c30 // indirect

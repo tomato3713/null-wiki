@@ -1,10 +1,12 @@
 package schema
 
 import (
+	"time"
+
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // User holds the schema definition for the User entity.
@@ -15,9 +17,23 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").Default("unknown"),
-		field.Time("created_at").Immutable().Default(time.Now),
-		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		field.String("name").
+			Default("unknown").
+			Annotations(
+				entgql.OrderField("NAME"),
+			),
+		field.Time("created_at").
+			Immutable().
+			Default(time.Now).
+			Annotations(
+				entgql.OrderField("CREATED_AT"),
+			),
+		field.Time("updated_at").
+			Default(time.Now).
+			UpdateDefault(time.Now).
+			Annotations(
+				entgql.OrderField("UPDATED_AT"),
+			),
 	}
 }
 

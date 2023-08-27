@@ -1,0 +1,2 @@
+"""Maps a Time GraphQL scalar to a Go time.Time struct."""
+scalar Time

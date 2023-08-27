@@ -1,0 +1,36 @@
+schema:
+  - ./pkg/graph/*.graphqls
+
+exec:
+  layout: follow-schema
+  dir: ./pkg/graph/generated
+  package: generated
+
+resolver:
+  layout: follow-schema
+  dir: ./pkg/graph/resolver
+  package: resolver
+  filename_template: "{name}.resolvers.go"
+
+autobind:
+  - github.com/tomato3713/nullwiki/pkg/ent
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.IntID
+  Uint64:
+    model:
+      - github.com/99designs/gqlgen/graphql.Uint64
+  Map:
+    model:
+      - github.com/99designs/gqlgen/graphql.Map
+  DateTime:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
+  Duration:
+    model:
+      - github.com/tomato3713/nullwiki/pkg/ent/schema/durationgql.Duration
+  Node:
+    model:
+      - github.com/tomato3713/nullwiki/pkg/ent.Noder
