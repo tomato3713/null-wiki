@@ -19,11 +19,14 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []user.OrderOption
-	inters     []Interceptor
-	predicates []predicate.User
-	withPages  *PageQuery
+	ctx            *QueryContext
+	order          []user.OrderOption
+	inters         []Interceptor
+	predicates     []predicate.User
+	withPages      *PageQuery
+	modifiers      []func(*sql.Selector)
+	loadTotal      []func(context.Context, []*User) error
+	withNamedPages map[string]*PageQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -383,6 +386,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(uq.modifiers) > 0 {
+		_spec.Modifiers = uq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -396,6 +402,18 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadPages(ctx, query, nodes,
 			func(n *User) { n.Edges.Pages = []*Page{} },
 			func(n *User, e *Page) { n.Edges.Pages = append(n.Edges.Pages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range uq.withNamedPages {
+		if err := uq.loadPages(ctx, query, nodes,
+			func(n *User) { n.appendNamedPages(name) },
+			func(n *User, e *Page) { n.appendNamedPages(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for i := range uq.loadTotal {
+		if err := uq.loadTotal[i](ctx, nodes); err != nil {
 			return nil, err
 		}
 	}
@@ -436,6 +454,9 @@ func (uq *UserQuery) loadPages(ctx context.Context, query *PageQuery, nodes []*U
 
 func (uq *UserQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := uq.querySpec()
+	if len(uq.modifiers) > 0 {
+		_spec.Modifiers = uq.modifiers
+	}
 	_spec.Node.Columns = uq.ctx.Fields
 	if len(uq.ctx.Fields) > 0 {
 		_spec.Unique = uq.ctx.Unique != nil && *uq.ctx.Unique
@@ -513,6 +534,20 @@ func (uq *UserQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// WithNamedPages tells the query-builder to eager-load the nodes that are connected to the "pages"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithNamedPages(name string, opts ...func(*PageQuery)) *UserQuery {
+	query := (&PageClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if uq.withNamedPages == nil {
+		uq.withNamedPages = make(map[string]*PageQuery)
+	}
+	uq.withNamedPages[name] = query
+	return uq
 }
 
 // UserGroupBy is the group-by builder for User entities.

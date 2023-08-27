@@ -36,6 +36,10 @@ type UserEdges struct {
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
+	// totalCount holds the count of the edges above.
+	totalCount [1]map[string]int
+
+	namedPages map[string][]*Page
 }
 
 // PagesOrErr returns the Pages value or an error if the edge
@@ -148,6 +152,30 @@ func (u *User) String() string {
 	builder.WriteString(u.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedPages returns the Pages named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedPages(name string) ([]*Page, error) {
+	if u.Edges.namedPages == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedPages[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedPages(name string, edges ...*Page) {
+	if u.Edges.namedPages == nil {
+		u.Edges.namedPages = make(map[string][]*Page)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedPages[name] = []*Page{}
+	} else {
+		u.Edges.namedPages[name] = append(u.Edges.namedPages[name], edges...)
+	}
 }
 
 // Users is a parsable slice of User.
